@@ -5,11 +5,13 @@ import path from 'path';
 
 const DB_PATH = '/Users/julian/.openclaw/workspace-dongge/database/tdac.db';
 
+// token → agency_id (null = admin, see all)
 const TOKEN_MAP: Record<string, string | null> = {
-  liao123: '廖',
-  lyly123: 'lyly',
-  chen123: '陈小姐',
-  admin888: null, // null = see all
+  liao123:   '8441022310',  // 廖XX
+  lyly123:   '8530786872',  // Lyly
+  chen123:   '7381539700',  // CHEN ROSE
+  monica123: '7967863736',  // 张XX / Monica
+  admin888:  null,          // admin, see all
 };
 
 async function getDb() {
@@ -32,33 +34,38 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const agencyFilter = TOKEN_MAP[token];
-    const isAdmin = agencyFilter === null;
+    const agencyId = TOKEN_MAP[token];
+    const isAdmin = agencyId === null;
     const db = await getDb();
 
-    const whereClause = agencyFilter ? ' WHERE agency = ?' : '';
-    const bindParams = agencyFilter ? [agencyFilter] : [];
+    const whereClause = agencyId ? ' WHERE agency_id = ?' : '';
 
     const countStmt = db.prepare(`SELECT COUNT(*) as count FROM tdac${whereClause}`);
-    if (agencyFilter) countStmt.bind([agencyFilter]);
+    if (agencyId) countStmt.bind([agencyId]);
     countStmt.step();
     const total = countStmt.getAsObject().count as number;
     countStmt.free();
 
-    const finishedStmt = db.prepare(`SELECT COUNT(*) as count FROM tdac${whereClause ? whereClause + ' AND' : ' WHERE'} is_finished = 1`);
-    if (agencyFilter) finishedStmt.bind([agencyFilter]);
+    const finishedStmt = db.prepare(
+      `SELECT COUNT(*) as count FROM tdac${whereClause ? whereClause + ' AND' : ' WHERE'} status = 'completed'`
+    );
+    if (agencyId) finishedStmt.bind([agencyId]);
     finishedStmt.step();
     const finishedCount = finishedStmt.getAsObject().count as number;
     finishedStmt.free();
 
-    const pendingStmt = db.prepare(`SELECT COUNT(*) as count FROM tdac${whereClause ? whereClause + ' AND' : ' WHERE'} is_finished = 0`);
-    if (agencyFilter) pendingStmt.bind([agencyFilter]);
+    const pendingStmt = db.prepare(
+      `SELECT COUNT(*) as count FROM tdac${whereClause ? whereClause + ' AND' : ' WHERE'} status != 'completed'`
+    );
+    if (agencyId) pendingStmt.bind([agencyId]);
     pendingStmt.step();
     const pendingCount = pendingStmt.getAsObject().count as number;
     pendingStmt.free();
 
-    const stmt = db.prepare(`SELECT * FROM tdac${whereClause} ORDER BY id DESC LIMIT ? OFFSET ?`);
-    stmt.bind(agencyFilter ? [agencyFilter, pageSize, offset] : [pageSize, offset]);
+    const stmt = db.prepare(
+      `SELECT * FROM tdac${whereClause} ORDER BY id DESC LIMIT ? OFFSET ?`
+    );
+    stmt.bind(agencyId ? [agencyId, pageSize, offset] : [pageSize, offset]);
     const rows: any[] = [];
     while (stmt.step()) {
       rows.push(stmt.getAsObject());

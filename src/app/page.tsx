@@ -18,9 +18,10 @@ interface TdacRecord {
   departure_country: string;
   arrival_airport: string;
   arrival_city: string;
-  agency: string;
-  is_paid: number;
-  is_finished: number;
+  agency_id: string;
+  agency_name: string;
+  channel: string;
+  status: string;
   create_date: string;
   update_date: string;
 }
@@ -191,11 +192,11 @@ export default function Home() {
                       <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                         {isAdmin && <td className="px-2 md:px-4 py-3">{record.id}</td>}
                         <td className="px-2 md:px-4 py-3 font-medium">{[record.family_name, record.first_name].filter(Boolean).join(' ')}</td>
-                        <td className="px-2 md:px-4 py-3">{record.sex === 'male' ? '男' : '女'}</td>
+                        <td className="px-2 md:px-4 py-3">{record.sex === 'M' ? '男' : '女'}</td>
                         <td className="px-2 md:px-4 py-3">{record.arrival_date?.slice(5)}</td>
-                        {isAdmin && <td className="px-2 md:px-4 py-3">{record.agency}</td>}
+                        {isAdmin && <td className="px-2 md:px-4 py-3">{record.agency_name}</td>}
                         <td className="px-2 md:px-4 py-3">
-                          {record.is_finished ? (
+                          {record.status === 'completed' ? (
                             <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-200">
                               已完成
                             </span>
