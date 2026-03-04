@@ -3,7 +3,7 @@ import initSqlJs from 'sql.js';
 import fs from 'fs';
 import path from 'path';
 
-const DB_PATH = '/Users/julian/.openclaw/workspace-dongge/database/tdac.db';
+const DB_PATH = '/Users/julian/Desktop/service/tdac/tdac.db';
 
 // token → agency_id (null = admin, see all)
 const TOKEN_MAP: Record<string, string | null> = {
