@@ -26,6 +26,25 @@ interface TdacRecord {
   update_date: string;
 }
 
+function StatusBadge({ status }: { status: string }) {
+  if (status === "completed") {
+    return (
+      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-200">
+        已完成
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200">
+      待处理
+    </span>
+  );
+}
+
+function fullName(record: TdacRecord) {
+  return [record.family_name, record.first_name].filter(Boolean).join(" ");
+}
+
 export default function Home() {
   const [data, setData] = useState<TdacRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +71,9 @@ export default function Home() {
       return;
     }
     setLoading(true);
-    fetch(`/api/tdac?page=${currentPage}&pageSize=${pageSize}&token=${token}`)
+    fetch(`/api/tdac?page=${currentPage}&pageSize=${pageSize}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((res) => {
         if (res.status === 401) {
           localStorage.removeItem("tdac_token");
@@ -104,7 +125,10 @@ export default function Home() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div className="w-full max-w-sm p-8">
-          <div className="flex flex-col items-center mb-6"><img src="/logo.png" alt="logo" className="w-24 h-24 mb-3" /><h1 className="text-2xl font-bold">保关系统</h1></div>
+          <div className="flex flex-col items-center mb-6">
+            <img src="/logo.png" alt="logo" className="w-24 h-24 mb-3" />
+            <h1 className="text-2xl font-bold">保关系统</h1>
+          </div>
           <div className="space-y-4">
             <input
               type="password"
@@ -128,8 +152,8 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-gray-100 dark:bg-gray-900">
-      <main className="flex-1 min-h-screen">
+    <div className="flex min-h-dvh w-full bg-gray-100 dark:bg-gray-900">
+      <main className="flex-1">
         <div className="p-4 md:p-8 space-y-4 md:space-y-8 max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
@@ -144,24 +168,24 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-xl border bg-white p-4 md:p-6 shadow-sm dark:bg-gray-950">
-              <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <span className="text-sm font-medium text-gray-500">总记录数</span>
+          <div className="grid grid-cols-3 gap-2 md:gap-4">
+            <div className="rounded-xl border bg-white p-3 md:p-6 shadow-sm dark:bg-gray-950">
+              <div className="pb-1 md:pb-2">
+                <span className="text-xs md:text-sm font-medium text-gray-500">总记录数</span>
               </div>
-              <div className="text-xl md:text-2xl font-bold">{total}</div>
+              <div className="text-lg md:text-2xl font-bold">{total}</div>
             </div>
-            <div className="rounded-xl border bg-white p-4 md:p-6 shadow-sm dark:bg-gray-950">
-              <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <span className="text-sm font-medium text-gray-500">已完成</span>
+            <div className="rounded-xl border bg-white p-3 md:p-6 shadow-sm dark:bg-gray-950">
+              <div className="pb-1 md:pb-2">
+                <span className="text-xs md:text-sm font-medium text-gray-500">已完成</span>
               </div>
-              <div className="text-xl md:text-2xl font-bold text-green-600">{finishedCount}</div>
+              <div className="text-lg md:text-2xl font-bold text-green-600">{finishedCount}</div>
             </div>
-            <div className="rounded-xl border bg-white p-4 md:p-6 shadow-sm dark:bg-gray-950">
-              <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <span className="text-sm font-medium text-gray-500">待处理</span>
+            <div className="rounded-xl border bg-white p-3 md:p-6 shadow-sm dark:bg-gray-950">
+              <div className="pb-1 md:pb-2">
+                <span className="text-xs md:text-sm font-medium text-gray-500">待处理</span>
               </div>
-              <div className="text-xl md:text-2xl font-bold text-yellow-600">{pendingCount}</div>
+              <div className="text-lg md:text-2xl font-bold text-yellow-600">{pendingCount}</div>
             </div>
           </div>
 
@@ -174,65 +198,77 @@ export default function Home() {
             ) : data.length === 0 ? (
               <div className="p-6 text-center text-gray-500">暂无数据</div>
             ) : (
-              <div className="border-t overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                      {isAdmin && <th className="px-2 md:px-4 py-3 text-left font-medium text-gray-500">ID</th>}
-                      <th className="px-2 md:px-4 py-3 text-left font-medium text-gray-500">姓名</th>
-                      <th className="px-2 md:px-4 py-3 text-left font-medium text-gray-500">性别</th>
-                      <th className="px-2 md:px-4 py-3 text-left font-medium text-gray-500">入境日期</th>
-                      {isAdmin && <th className="px-2 md:px-4 py-3 text-left font-medium text-gray-500">代理</th>}
-                      <th className="px-2 md:px-4 py-3 text-left font-medium text-gray-500">状态</th>
-                      <th className="px-2 md:px-4 py-3 text-left font-medium text-gray-500 hidden md:table-cell">创建时间</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                    {data.map((record) => (
-                      <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        {isAdmin && <td className="px-2 md:px-4 py-3">{record.id}</td>}
-                        <td className="px-2 md:px-4 py-3 font-medium">{[record.family_name, record.first_name].filter(Boolean).join(' ')}</td>
-                        <td className="px-2 md:px-4 py-3">{record.sex === 'M' ? '男' : '女'}</td>
-                        <td className="px-2 md:px-4 py-3">{record.arrival_date?.slice(5)}</td>
-                        {isAdmin && <td className="px-2 md:px-4 py-3">{record.agency_name}</td>}
-                        <td className="px-2 md:px-4 py-3">
-                          {record.status === 'completed' ? (
-                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-200">
-                              已完成
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200">
-                              待处理
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-2 md:px-4 py-3 text-gray-500 hidden md:table-cell">{record.create_date?.slice(0, 10)}</td>
+              <>
+                {/* Mobile: card layout */}
+                <div className="border-t divide-y md:hidden">
+                  {data.map((record) => (
+                    <div key={record.id} className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{fullName(record)}</span>
+                        <StatusBadge status={record.status} />
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <span>{record.sex === "M" ? "男" : "女"}</span>
+                        <span>入境 {record.arrival_date?.slice(5)}</span>
+                        {isAdmin && <span>{record.agency_name}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop: table layout */}
+                <div className="border-t overflow-x-auto hidden md:block">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
+                      <tr>
+                        {isAdmin && <th className="px-4 py-3 text-left font-medium text-gray-500">ID</th>}
+                        <th className="px-4 py-3 text-left font-medium text-gray-500">姓名</th>
+                        <th className="px-4 py-3 text-left font-medium text-gray-500">性别</th>
+                        <th className="px-4 py-3 text-left font-medium text-gray-500">入境日期</th>
+                        {isAdmin && <th className="px-4 py-3 text-left font-medium text-gray-500">代理</th>}
+                        <th className="px-4 py-3 text-left font-medium text-gray-500">状态</th>
+                        <th className="px-4 py-3 text-left font-medium text-gray-500">创建时间</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                      {data.map((record) => (
+                        <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                          {isAdmin && <td className="px-4 py-3">{record.id}</td>}
+                          <td className="px-4 py-3 font-medium">{fullName(record)}</td>
+                          <td className="px-4 py-3">{record.sex === "M" ? "男" : "女"}</td>
+                          <td className="px-4 py-3">{record.arrival_date?.slice(5)}</td>
+                          {isAdmin && <td className="px-4 py-3">{record.agency_name}</td>}
+                          <td className="px-4 py-3">
+                            <StatusBadge status={record.status} />
+                          </td>
+                          <td className="px-4 py-3 text-gray-500">{record.create_date?.slice(0, 10)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-t px-4 md:px-6 py-4">
+            <div className="flex items-center justify-between border-t px-4 md:px-6 py-4">
               <div className="text-sm text-gray-500">
-                第 {currentPage} 页，共 {totalPages} 页
+                {currentPage} / {totalPages}
               </div>
               <div className="flex items-center space-x-2">
                 <button
-                  className="inline-flex items-center rounded-md border px-2 md:px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                   disabled={currentPage <= 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">上一页</span>
+                  <span className="hidden sm:inline ml-1">上一页</span>
                 </button>
                 <button
-                  className="inline-flex items-center rounded-md border px-2 md:px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                   disabled={currentPage >= totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 >
-                  <span className="hidden sm:inline">下一页</span>
+                  <span className="hidden sm:inline mr-1">下一页</span>
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>

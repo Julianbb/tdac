@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "tdac",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,6 +14,9 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "sql.js": "^1.14.0"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": ["sharp", "unrs-resolver"]
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

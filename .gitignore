@@ -1,8 +1,10 @@
 .next
 node_modules
 .env
+.env.*
 *.sqlite
 .vscode
 .DS_Store
 /dist
 /build
+*.tsbuildinfo
